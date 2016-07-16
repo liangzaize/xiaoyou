@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/color"
+    tools:context="com.example.mario.xiaoyou.MainActivity"
+    android:weightSum="1">
+
+
+    <include layout="@layout/main_title"
+        android:id="@+id/include" />
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh"
+        android:layout_width="match_parent"
+        android:layout_height="458dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentTop="true">
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/lie"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true">
+
+        </ListView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+    <ImageButton
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        android:id="@+id/fab"
+        android:elevation="12dp"
+        android:background="@drawable/ripple"
+        app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
+
+</RelativeLayout>

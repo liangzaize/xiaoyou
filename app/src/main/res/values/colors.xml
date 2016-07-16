@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimaryDark">#fff</color>
+    <color name="middle_line">#4253fa</color>
+    <color name="color">#fff</color>
+    <color name="color_red">#CD0000</color>
+    <color name="color_hui">#6C6C6C</color>
+    <color name="color_hei">#000</color>
+</resources>

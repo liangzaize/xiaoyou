@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="20dp"
+    >
+
+    <ImageView
+        android:id="@+id/main_title_imageview"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@drawable/reply"
+        android:layout_gravity="center_horizontal"
+        android:layout_toStartOf="@+id/submit"
+        android:layout_alignBottom="@+id/submit" />
+
+    <EditText
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/submitmain"
+        android:hint="分享新鲜事!!"
+        android:textColor="#000"
+        android:gravity="top"
+        android:minLines="25"
+        android:textColorHint="#000"
+        android:background="@drawable/selector"
+        android:layout_below="@+id/submittitle"
+        android:layout_alignParentStart="true"
+        android:maxLength="300"
+        />
+
+    <EditText
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/submittitle"
+        android:background="@drawable/selector"
+        android:hint="来一个响亮的标题"
+        android:textColorHint="#000"
+        android:textColor="#000"
+        android:layout_below="@+id/main_title_imageview"
+        android:layout_alignParentStart="true"
+        android:maxLength="15"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="发布"
+        android:id="@+id/submit"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
+
+</RelativeLayout>
