@@ -1,5 +1,5 @@
 package com.example.mario.xiaoyou;
-//更新
+
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
@@ -14,6 +14,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -27,11 +28,13 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,11 +49,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener{
 
     private View leftButton, upview;
     private ImageView imageView, menuButton;
@@ -69,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         init();
 
-
         int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         upview.measure(w, h);
@@ -83,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         listView.addHeaderView(header);
         listView.setOnTouchListener(onTouchListener);
         listView.setOnScrollListener(onScrollListener);
+        listView.setOnItemClickListener(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getWindow().getDecorView().setSystemUiVisibility(
@@ -159,6 +163,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id){
+        String text = listView.getItemAtPosition(position)+"";
+        Toast.makeText(this,text,Toast.LENGTH_SHORT).show();
     }
 
     private void animateBack() {
@@ -382,6 +392,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(List<Listviewover> data) {
             if (data != null) {
                 LayoutInflater inflater = getLayoutInflater();
+                Collections.reverse(data);
                 MyAdapter adapter = new MyAdapter(inflater, data);
                 listView.setAdapter(adapter);
                 imageView.setImageResource(R.drawable.main_title);

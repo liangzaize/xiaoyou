@@ -17,6 +17,7 @@ public class Listviewover {
     public Bitmap getImag() {
         return imag;
     }
+
     public void setImag(Bitmap imag) {
         this.imag = imag;
     }
@@ -24,6 +25,7 @@ public class Listviewover {
     public String getName() {
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -31,6 +33,7 @@ public class Listviewover {
     public String getTitle() {
         return title;
     }
+
     public void setTitle(String title) {
         this.title = title;
     }
