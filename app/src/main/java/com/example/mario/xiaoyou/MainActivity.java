@@ -167,8 +167,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id){
-        String text = listView.getItemAtPosition(position)+"";
-        Toast.makeText(this,text,Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(MainActivity.this,Reply.class);
+        intent.putExtra("extra_data",position);
+        startActivity(intent);
     }
 
     private void animateBack() {
