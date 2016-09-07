@@ -34,6 +34,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -41,10 +42,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -62,7 +66,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ListView listView;
     private SwipeRefreshLayout swipeLayout;
     private List<Listviewover> mData;
+    private Button bt;
+    private ProgressBar pg;
     int touchSlop = 10;
+    private View moreView;
+    private int numtorefresh = 1;
+    int MaxNum;
     private AnimatorSet backAnimatorSet, hideAnimatorSet;
     View header;
     int statusBarHeight;
@@ -71,7 +80,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        MaxNum = 10;
         init();
+
+        moreView = getLayoutInflater().inflate(R.layout.moredata, null);
+
+        bt = (Button) moreView.findViewById(R.id.bt_load);
+        pg = (ProgressBar) moreView.findViewById(R.id.pg);
 
         int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
@@ -94,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
 
-        new JSONTask().execute("http://40.84.62.67:80/init");
+        new JSONTask().execute(numtorefresh);
         imageView.setImageResource(R.drawable.animationlist);
         animationDrawable = (AnimationDrawable) imageView.getDrawable();
         animationDrawable.start();
@@ -108,16 +123,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     @Override
                     public void run() {
                         swipeLayout.setRefreshing(false);
-                        new JSONTask().execute("http://40.84.62.67:80/init");
+                        new JSONTask().execute(1);
                         imageView.setImageResource(R.drawable.animationlist);
                         animationDrawable = (AnimationDrawable) imageView.getDrawable();
                         animationDrawable.start();
                         Savebitmap savebitmap = new Savebitmap();
                         Bitmap bitmap = savebitmap.getBitmap();
                         Think ai = new Think();
-                        if (bitmap != null && ai.geta() ==1) {
+                        if (bitmap != null && ai.geta() == 1) {
                             menuButton.setImageBitmap(bitmap);
-                        }else{
+                        } else {
                             menuButton.setImageResource(R.drawable.go);
                         }
                     }
@@ -166,9 +181,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id){
-        Intent intent = new Intent(MainActivity.this,Reply.class);
-        intent.putExtra("extra_data",position);
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Intent intent = new Intent(MainActivity.this, Reply.class);
+        intent.putExtra("extra_data", position);
         startActivity(intent);
     }
 
@@ -315,15 +330,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int contentTop = v.getTop();
     }
 
-    private class JSONTask extends AsyncTask<String, String, List<Listviewover>> {
+    private class JSONTask extends AsyncTask<Integer, String, List<Listviewover>> {
 
         String str, str1, str2 = "";
 
         @Override
-        protected List<Listviewover> doInBackground(String... params) {
+        protected List<Listviewover> doInBackground(Integer... params) {
 
             try {
-                URL url = new URL(params[0]);
+                URL url = new URL("http://40.84.62.67:80/init");
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setConnectTimeout(3000);
                 connection.setDoOutput(true);
@@ -333,6 +348,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 connection.setInstanceFollowRedirects(true);
                 connection.setRequestProperty("Content-type", "application/json");
                 connection.connect();
+
+                DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(dataOutputStream));
+
+                JSONObject jsonObject = new JSONObject();
+
+                try {
+                    jsonObject.put("howmany", params[0]);
+                }
+                catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                    String result = jsonObject.toString();
+                bw.write(result);
+                String s = Integer.toString(params[0]);
+                bw.flush();
+                connection.getInputStream();
+                dataOutputStream.close();
+                bw.close();
 
                 InputStream stream = connection.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
@@ -356,7 +390,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     String phototouxiang = finalObject.getString("Touxiangphoto");
                     title += "/";
                     name += "/";
-                    phototouxiang +="_";
+                    phototouxiang += "_";
                     str += title;
                     str1 += name;
                     str2 += phototouxiang;
@@ -393,15 +427,31 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         protected void onPostExecute(List<Listviewover> data) {
             if (data != null) {
                 LayoutInflater inflater = getLayoutInflater();
-                Collections.reverse(data);
-                MyAdapter adapter = new MyAdapter(inflater, data);
+                //Collections.reverse(data);
+                final MyAdapter adapter = new MyAdapter(inflater, data);
+                listView.addFooterView(moreView);
                 listView.setAdapter(adapter);
+                bt.setOnClickListener(new View.OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+                        numtorefresh +=1;
+                        pg.setVisibility(View.VISIBLE);// 将进度条可见
+                        bt.setVisibility(View.GONE);// 按钮不可见
+                        new JSONTask().execute(numtorefresh);//继续加载数据
+                        bt.setVisibility(View.VISIBLE);
+                        pg.setVisibility(View.GONE);
+                        adapter.notifyDataSetChanged();// 通知listView刷新数据
+
+                    }
+                });
+
                 imageView.setImageResource(R.drawable.main_title);
             }
         }
     }
 
-    private void init(){
+    private void init() {
         imageView = (ImageView) findViewById(R.id.main_title_imageview);
         swipeLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         menuButton = (ImageView) findViewById(R.id.main_title_button_right);
