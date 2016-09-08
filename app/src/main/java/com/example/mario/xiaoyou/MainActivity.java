@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private AnimationDrawable animationDrawable;
     private ListView listView;
     private SwipeRefreshLayout swipeLayout;
-    private List<Listviewover> mData;
+    private List<Listviewover> amData;
     private Button bt;
     private ProgressBar pg;
     int touchSlop = 10;
@@ -87,6 +87,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         bt = (Button) moreView.findViewById(R.id.bt_load);
         pg = (ProgressBar) moreView.findViewById(R.id.pg);
+
+        amData = new ArrayList<>();
 
         int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
@@ -123,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     @Override
                     public void run() {
                         swipeLayout.setRefreshing(false);
+                        amData = new ArrayList<>();
                         new JSONTask().execute(1);
                         imageView.setImageResource(R.drawable.animationlist);
                         animationDrawable = (AnimationDrawable) imageView.getDrawable();
@@ -400,7 +403,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 String[] sArray1 = str1.split("/");
                 String[] sArray2 = str2.split("_");
 
-                mData = new ArrayList<>();
+                //mData = new ArrayList<>();
                 for (int j = 0; j < sArray.length; j++) {
                     Bitmap bitmap = null;
                     try {
@@ -411,7 +414,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         e.printStackTrace();
                     }
                     Listviewover a = new Listviewover(sArray[j], sArray1[j], bitmap);
-                    mData.add(a);
+                    amData.add(a);
                 }
 
             } catch (IOException e) {
@@ -420,19 +423,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 e.printStackTrace();
             }
 
-            return mData;
+            return amData;
         }
 
         @Override
         protected void onPostExecute(List<Listviewover> data) {
             if (data != null) {
                 LayoutInflater inflater = getLayoutInflater();
-                //Collections.reverse(data);
+                //Collections.reverse(data);倒置list
                 final MyAdapter adapter = new MyAdapter(inflater, data);
                 listView.addFooterView(moreView);
                 listView.setAdapter(adapter);
                 bt.setOnClickListener(new View.OnClickListener() {
-
                     @Override
                     public void onClick(View v) {
                         numtorefresh +=1;
@@ -442,10 +444,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         bt.setVisibility(View.VISIBLE);
                         pg.setVisibility(View.GONE);
                         adapter.notifyDataSetChanged();// 通知listView刷新数据
-
                     }
                 });
-
                 imageView.setImageResource(R.drawable.main_title);
             }
         }
