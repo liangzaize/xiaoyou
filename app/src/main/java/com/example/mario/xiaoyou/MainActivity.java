@@ -59,40 +59,30 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, AbsListView.OnScrollListener {
 
-    private View leftButton, upview;
+    private View leftButton, upview,moreView,header;
     private ImageView imageView, menuButton;
     private AnimationDrawable animationDrawable;
     private ListView listView;
     private SwipeRefreshLayout swipeLayout;
     private List<Listviewover> amData;
-    private Button bt;
-    private TextView tx;
-    int touchSlop = 10;
-    private View moreView;
-    private int numtorefresh = 1;
-    int MaxNum;
+    private TextView tx, bt;
+    int numtorefresh = 1,touchSlop = 10,MaxNum,statusBarHeight,lastVisibleIndex;
     private AnimatorSet backAnimatorSet, hideAnimatorSet;
-    View header;
-    int statusBarHeight;
-    String biaozhi;
+    private String biaozhi;
+    private MyAdapter adapter;
+    private String[] sArray1 , sArray , sArray3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         MaxNum = 10;
-        init();
-
         moreView = getLayoutInflater().inflate(R.layout.moredata, null);
-
-        bt = (Button) moreView.findViewById(R.id.bt_load);
-        tx = (TextView) moreView.findViewById(R.id.tx);
+        init();
         tx.setVisibility(View.GONE);
-
         amData = new ArrayList<>();
-
         int w = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         int h = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
         upview.measure(w, h);
@@ -107,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         listView.setOnTouchListener(onTouchListener);
         listView.setOnScrollListener(onScrollListener);
         listView.setOnItemClickListener(this);
+        listView.setOnScrollListener(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getWindow().getDecorView().setSystemUiVisibility(
@@ -188,7 +179,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent intent = new Intent(MainActivity.this, Reply.class);
-        intent.putExtra("extra_data", position);
+        int count = position - 1;
+        String title = sArray[count];
+        String name = sArray1[count];
+        String time = sArray3[count];
+        intent.putExtra("name", name);
+        intent.putExtra("title", title);
+        intent.putExtra("time",time);
         startActivity(intent);
     }
 
@@ -337,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private class JSONTask extends AsyncTask<Integer, String, List<Listviewover>> {
 
-        String str, str1, str2 = "";
+        String str = "", str1 = "", str2 = "", str3 = "";
 
         @Override
         protected List<Listviewover> doInBackground(Integer... params) {
@@ -366,7 +363,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
                 String result = jsonObject.toString();
                 bw.write(result);
-                String s = Integer.toString(params[0]);
                 bw.flush();
                 connection.getInputStream();
                 dataOutputStream.close();
@@ -388,7 +384,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 biaozhi = parentObject.getString("Max");//接受到Max为end时,表明已经是最后一页了,要隐藏下面的button
 
-                Log.d("hukangze", biaozhi);
                 JSONArray parentArray = parentObject.getJSONArray("Servers");
 
                 for (int i = 0; i < parentArray.length(); i++) {
@@ -396,24 +391,27 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     String title = finalObject.getString("Title");
                     String name = finalObject.getString("Name");
                     String phototouxiang = finalObject.getString("Touxiangphoto");
-                    title += "/";
-                    name += "/";
+                    String time = finalObject.getString("Time");
+                    time +="_";
+                    title += "_";
+                    name += "_";
                     phototouxiang += "_";
                     str += title;
                     str1 += name;
                     str2 += phototouxiang;
+                    str3 += time;
                 }
 
-                String[] sArray = str.split("/");
-                String[] sArray1 = str1.split("/");
+                sArray = str.split("_");
+                sArray1 = str1.split("_");
                 String[] sArray2 = str2.split("_");
+                sArray3 = str3.split("_");
 
                 if (params[1] == 2) {
                     amData.clear();
                     numtorefresh = 1;
                 }
 
-                //mData = new ArrayList<>();
                 for (int j = 0; j < sArray.length; j++) {
                     Bitmap bitmap = null;
                     try {
@@ -442,31 +440,38 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 listView.removeFooterView(moreView);
                 LayoutInflater inflater = getLayoutInflater();
                 //Collections.reverse(data);倒置list
-                final MyAdapter adapter = new MyAdapter(inflater, data);
+                adapter = new MyAdapter(inflater, data);
                 listView.addFooterView(moreView);//添加底部view
                 listView.setAdapter(adapter);
-                Log.d("hukangze1", biaozhi);
                 if (biaozhi.equals("end")) {
-                    bt.setVisibility(View.GONE);// 按钮不可见
+                    listView.removeFooterView(moreView);
                     tx.setVisibility(View.VISIBLE);//提醒可见
                 } else {
                     bt.setVisibility(View.VISIBLE);
                     tx.setVisibility(View.GONE);
                 }
-                bt.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        numtorefresh += 1;
-
-                        new JSONTask().execute(numtorefresh, 1);//继续加载数据
-
-                        adapter.notifyDataSetChanged();// 通知listView刷新数据
-                    }
-                });
                 imageView.setImageResource(R.drawable.main_title);
             }
         }
     }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        // 计算最后可见条目的索引
+        lastVisibleIndex = visibleItemCount;
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        // 滑到底部后自动加载，判断listview已经停止滚动并且最后可视的条目等于adapter的条目
+        if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL && lastVisibleIndex == adapter.getCount() && !biaozhi.equals("end")) {
+            numtorefresh++;
+            new JSONTask().execute(numtorefresh, 1);//继续加载数据
+            //adapter.notifyDataSetChanged();// 通知listView刷新数据
+        }
+
+    }
+
 
     private void init() {
         imageView = (ImageView) findViewById(R.id.main_title_imageview);
@@ -475,6 +480,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         leftButton = findViewById(R.id.fab);
         listView = (ListView) findViewById(R.id.lie);
         upview = findViewById(R.id.include);
+        bt = (TextView) moreView.findViewById(R.id.bt_load);
+        tx = (TextView) moreView.findViewById(R.id.tx);
     }
 }
 

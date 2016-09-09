@@ -8,6 +8,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.Time;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JsResult;
@@ -29,21 +31,22 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Timer;
 
-public class Person extends Activity
-{
-//    private WebView webView;
-    private EditText editText1,editText2;
+public class Person extends Activity {
+    private EditText editText1, editText2;
     private Button button;
 
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.person_layour);
         init();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
             getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
         button.setOnClickListener(new View.OnClickListener() {
@@ -56,21 +59,23 @@ public class Person extends Activity
         });
     }
 
-    private String dataToJson(){
+    private String dataToJson() {
         String result = "";
-
+        SimpleDateFormat formatter = new SimpleDateFormat ("yyyyMMddHHmmss");
+        Date curDate = new Date(System.currentTimeMillis());//获取当前时间
+        String str = formatter.format(curDate);
         String title = editText1.getText().toString();
         String maint = editText2.getText().toString();
-        SharedPreferences pref = getSharedPreferences("name",MODE_PRIVATE);
-        String name = pref.getString("name","");
+        SharedPreferences pref = getSharedPreferences("name", MODE_PRIVATE);
+        String name = pref.getString("name", "");
 
         JSONObject jsonObject = new JSONObject();
 
         try {
-            jsonObject.put("title",title);
-            jsonObject.put("maint",maint);
-            jsonObject.put("name",name);
-
+            jsonObject.put("title", title);
+            jsonObject.put("maint", maint);
+            jsonObject.put("name", name);
+            jsonObject.put("time",str);
             result = jsonObject.toString();
 
         } catch (JSONException e) {
@@ -79,11 +84,11 @@ public class Person extends Activity
         return result;
     }
 
-    private class Getsend extends AsyncTask<String,Void,Boolean> {
+    private class Getsend extends AsyncTask<String, Void, Boolean> {
 
         @Override
         protected void onPreExecute() {
-            Toast.makeText(Person.this,"正在分享",Toast.LENGTH_SHORT).show();
+            Toast.makeText(Person.this, "正在分享", Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -115,18 +120,17 @@ public class Person extends Activity
         @Override
         protected void onPostExecute(Boolean aBoolean) {
             if (aBoolean) {
-                Toast.makeText(Person.this,"分享成功",Toast.LENGTH_SHORT).show();
+                Toast.makeText(Person.this, "分享成功", Toast.LENGTH_SHORT).show();
                 finish();
-            }else{
-                Toast.makeText(Person.this,"连接服务器失败，请检查网络",Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(Person.this, "连接服务器失败，请检查网络", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    private void init(){
+    private void init() {
         editText1 = (EditText) findViewById(R.id.submittitle);
         editText2 = (EditText) findViewById(R.id.submitmain);
         button = (Button) findViewById(R.id.submit);
-//        webView = (WebView) findViewById(R.id.person);
     }
 }
