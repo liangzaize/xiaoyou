@@ -35,6 +35,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -58,7 +59,7 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener{
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
     private View leftButton, upview;
     private ImageView imageView, menuButton;
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private SwipeRefreshLayout swipeLayout;
     private List<Listviewover> amData;
     private Button bt;
-    private ProgressBar pg;
+    private TextView tx;
     int touchSlop = 10;
     private View moreView;
     private int numtorefresh = 1;
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private AnimatorSet backAnimatorSet, hideAnimatorSet;
     View header;
     int statusBarHeight;
+    String biaozhi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +88,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         moreView = getLayoutInflater().inflate(R.layout.moredata, null);
 
         bt = (Button) moreView.findViewById(R.id.bt_load);
-        pg = (ProgressBar) moreView.findViewById(R.id.pg);
+        tx = (TextView) moreView.findViewById(R.id.tx);
+        tx.setVisibility(View.GONE);
 
         amData = new ArrayList<>();
 
@@ -111,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             getWindow().setStatusBarColor(Color.TRANSPARENT);
         }
 
-        new JSONTask().execute(numtorefresh);
+        new JSONTask().execute(numtorefresh, 2);
         imageView.setImageResource(R.drawable.animationlist);
         animationDrawable = (AnimationDrawable) imageView.getDrawable();
         animationDrawable.start();
@@ -125,8 +128,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     @Override
                     public void run() {
                         swipeLayout.setRefreshing(false);
-                        amData = new ArrayList<>();
-                        new JSONTask().execute(1);
+                        new JSONTask().execute(1, 2);
                         imageView.setImageResource(R.drawable.animationlist);
                         animationDrawable = (AnimationDrawable) imageView.getDrawable();
                         animationDrawable.start();
@@ -359,11 +361,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 try {
                     jsonObject.put("howmany", params[0]);
-                }
-                catch (JSONException e) {
+                } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                    String result = jsonObject.toString();
+                String result = jsonObject.toString();
                 bw.write(result);
                 String s = Integer.toString(params[0]);
                 bw.flush();
@@ -384,6 +385,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 String finalJson = buffer.toString();
 
                 JSONObject parentObject = new JSONObject(finalJson);
+
+                biaozhi = parentObject.getString("Max");//接受到Max为end时,表明已经是最后一页了,要隐藏下面的button
+
+                Log.d("hukangze", biaozhi);
                 JSONArray parentArray = parentObject.getJSONArray("Servers");
 
                 for (int i = 0; i < parentArray.length(); i++) {
@@ -402,6 +407,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 String[] sArray = str.split("/");
                 String[] sArray1 = str1.split("/");
                 String[] sArray2 = str2.split("_");
+
+                if (params[1] == 2) {
+                    amData.clear();
+                    numtorefresh = 1;
+                }
 
                 //mData = new ArrayList<>();
                 for (int j = 0; j < sArray.length; j++) {
@@ -429,20 +439,27 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         protected void onPostExecute(List<Listviewover> data) {
             if (data != null) {
+                listView.removeFooterView(moreView);
                 LayoutInflater inflater = getLayoutInflater();
                 //Collections.reverse(data);倒置list
                 final MyAdapter adapter = new MyAdapter(inflater, data);
-                listView.addFooterView(moreView);
+                listView.addFooterView(moreView);//添加底部view
                 listView.setAdapter(adapter);
+                Log.d("hukangze1", biaozhi);
+                if (biaozhi.equals("end")) {
+                    bt.setVisibility(View.GONE);// 按钮不可见
+                    tx.setVisibility(View.VISIBLE);//提醒可见
+                } else {
+                    bt.setVisibility(View.VISIBLE);
+                    tx.setVisibility(View.GONE);
+                }
                 bt.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        numtorefresh +=1;
-                        pg.setVisibility(View.VISIBLE);// 将进度条可见
-                        bt.setVisibility(View.GONE);// 按钮不可见
-                        new JSONTask().execute(numtorefresh);//继续加载数据
-                        bt.setVisibility(View.VISIBLE);
-                        pg.setVisibility(View.GONE);
+                        numtorefresh += 1;
+
+                        new JSONTask().execute(numtorefresh, 1);//继续加载数据
+
                         adapter.notifyDataSetChanged();// 通知listView刷新数据
                     }
                 });

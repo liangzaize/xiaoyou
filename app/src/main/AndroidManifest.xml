@@ -26,6 +26,7 @@
         <activity android:name=".Personname"/>
         <activity android:name=".UnPersonname"/>
         <activity android:name=".SelectPicPopupWindow" android:theme="@style/MyDialogStyleBottom" />
+        <activity android:name=".Reply"/>
     </application>
 
 </manifest>
